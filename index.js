@@ -28,12 +28,13 @@ const appendData = (data) => {
 }
 
 const getTime = async () => {
-  const nowTime = new Date().getTime()
   const response = await axios.get('https://sponsor.ajay.app/api/status')
+  const nowTime = new Date().getTime()
   const data = {
     time: nowTime,
     axiosResponseTime: response.config.metadata.responseTime,
     sbResponseTime: response.data.startTime - nowTime,
+    sbProcessTime: response.data.processTime,
     status: response.status
   }
   appendData(data)
@@ -44,16 +45,19 @@ const getAverage = (data) => data.reduce((a, b) => a + b, 0) / data.length
 const getAverageOverTime = (data, TIME) => {
   const axiosResponseArr = []
   const sbResponseArr = []
+  const sbProcessTimeArr = []
   for (const x of data) {
     if (x.time > (new Date().getTime() - TIME)) {
       axiosResponseArr.push(x.axiosResponseTime)
       sbResponseArr.push(x.sbResponseTime)
+      sbProcessTimeArr.push(x.sbProcessTime)
     }
   }
   return {
     samples: axiosResponseArr.length,
     axiosResponseTime: getAverage(axiosResponseArr),
-    sbResponseTime: getAverage(sbResponseArr)
+    sbResponseTime: getAverage(sbResponseArr),
+    sbProcessTime: getAverage(sbProcessTimeArr)
   }
 }
 
