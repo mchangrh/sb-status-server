@@ -1,7 +1,12 @@
 const fastify = require('fastify')()
 const fs = require('fs')
+const cron = require('node-cron')
 const FIVEMINUTES = 5 * 60 * 1000
 const FIFTEENMINUTES = FIVEMINUTES * 3
+// set up node cron
+cron.schedule('* * * * *', () => {
+  getTime()
+})
 // set up axios
 const axios = require('axios')
 axios.interceptors.request.use(config => {
