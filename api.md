@@ -15,15 +15,15 @@ Get 5 and 15 minute averages
 {
   5: {
     samples: int, // number of samples
-    axiosResponseTime: int, // average of axios response time
-    sbResponseTime: int, // average of sb response time
-    sbProcessTime: int // average of sb processing time
+    axiosResponseTime: float, // average of axios response time
+    sbResponseTime: float, // average of sb response time
+    sbProcessTime: float // average of sb processing time
   },
   15: {
     samples: int, // number of samples
-    axiosResponseTime: int, // average of axios response time
-    sbResponseTime: int, // average of sb response time
-    sbProcessTime: int // average of sb processing time
+    axiosResponseTime: float, // average of axios response time
+    sbResponseTime: float, // average of sb response time
+    sbProcessTime: float // average of sb processing time
   }
 }
 ```
@@ -33,9 +33,9 @@ get 5 minute average
 ```js
 {
   samples: int, // number of samples
-  axiosResponseTime: int, // average of axios response time
-  sbResponseTime: int, // average of sb response time
-  sbProcessTime: int // average of sb processing time
+  axiosResponseTime: float, // average of axios response time
+  sbResponseTime: float, // average of sb response time
+  sbProcessTime: float // average of sb processing time
 }
 ```
 
@@ -44,9 +44,9 @@ get 15 minute average
 ```js
 {
   samples: int, // number of samples
-  axiosResponseTime: int, // average of axios response time
-  sbResponseTime: int, // average of sb response time
-  sbProcessTime: int // average of sb processing time
+  axiosResponseTime: float, // average of axios response time
+  sbResponseTime: float, // average of sb response time
+  sbProcessTime: float // average of sb processing time
 }
 ```
 
