@@ -1,0 +1,30 @@
+{
+  "name": "sb-status-server",
+  "version": "1.0.0",
+  "description": "monitors status of discord bot",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "fastify": "^3.24.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.29.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mchangrh/discord-bot-down.git"
+  },
+  "author": "Michael Chang <michael@mchang.name>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mchangrh/discord-bot-down/issues"
+  },
+  "homepage": "https://github.com/mchangrh/discord-bot-down#readme"
+}
