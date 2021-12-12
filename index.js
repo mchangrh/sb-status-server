@@ -74,6 +74,15 @@ function startWebserver () {
   fastify.all('/raw', (request, reply) => {
     reply.send(getData())
   })
+  fastify.all('/all', (request, reply) => {
+    const data = getData()
+    reply.send({
+      last: data[data.length - 1],
+      5: getAverageOverTime(data, FIVEMINUTES),
+      15: getAverageOverTime(data, FIFTEENMINUTES)
+    })
+    getTime()
+  })
   fastify.all('/average/5', (request, reply) => {
     reply.send(getAverageOverTime(getData(), FIVEMINUTES))
   })
