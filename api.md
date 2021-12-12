@@ -9,6 +9,17 @@ Get measured response time from SponsorBlock server
 }
 ```
 
+`/last`  
+Get last measured response time from SponsorBlock server
+```js
+{
+  time: int, // node unix time
+  axiosResponseTime: int, // ms of http response time
+  sbResponseTime: int, // ms of time from sb to receiving response
+  sbProcessTime: int, // ms of processing time from sb-server
+}
+```
+
 `/average`  
 Get 5 and 15 minute averages
 ```js

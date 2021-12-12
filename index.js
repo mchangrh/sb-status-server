@@ -68,6 +68,9 @@ function startWebserver () {
   fastify.all('/status', async (request, reply) => {
     reply.send(await getTime())
   })
+  fastify.all('/last', async (request, reply) => {
+    reply.send(getData().pop())
+  })
   fastify.all('/raw', (request, reply) => {
     reply.send(getData())
   })
