@@ -28,8 +28,8 @@ const appendData = (data) => {
 }
 
 const getTime = async () => {
-  const response = await axios.get('https://sponsor.ajay.app/api/status')
   const nowTime = new Date().getTime()
+  const response = await axios.get('https://sponsor.ajay.app/api/status')
   const data = {
     time: nowTime,
     axiosResponseTime: response.config.metadata.responseTime,
