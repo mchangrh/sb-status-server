@@ -29,13 +29,15 @@ const appendData = (data) => {
 
 const getTime = async () => {
   const nowTime = new Date().getTime()
-  const response = await axios.get('https://sponsor.ajay.app/api/status')
+  const statusRes = await axios.get('https://sponsor.ajay.app/api/status')
+  const skipRes = await axios.get('https://sponsor.ajay.app/api/skipSegments/abcd')
   const data = {
     time: nowTime,
-    axiosResponseTime: response.config.metadata.responseTime,
-    sbResponseTime: response.data.startTime - nowTime,
-    sbProcessTime: response.data.processTime,
-    status: response.status
+    axiosResponseTime: statusRes.config.metadata.responseTime,
+    sbResponseTime: statusRes.data.startTime - nowTime,
+    sbProcessTime: statusRes.data.processTime,
+    skipResponseTime: skipRes.config.metadata.responseTime,
+    status: statusRes.status
   }
   appendData(data)
   return data
@@ -46,18 +48,21 @@ const getAverageOverTime = (data, TIME) => {
   const axiosResponseArr = []
   const sbResponseArr = []
   const sbProcessTimeArr = []
+  const skipResponseArr = []
   for (const x of data) {
     if (x.time > (new Date().getTime() - TIME)) {
       axiosResponseArr.push(x.axiosResponseTime)
       sbResponseArr.push(x.sbResponseTime)
       sbProcessTimeArr.push(x.sbProcessTime)
+      skipResponseArr.push(x.skipResponseTime)
     }
   }
   return {
     samples: axiosResponseArr.length,
     axiosResponseTime: getAverage(axiosResponseArr),
     sbResponseTime: getAverage(sbResponseArr),
-    sbProcessTime: getAverage(sbProcessTimeArr)
+    sbProcessTime: getAverage(sbProcessTimeArr),
+    skipResponeTime: getAverage(skipResponseArr)
   }
 }
 
