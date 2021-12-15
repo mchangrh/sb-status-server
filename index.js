@@ -62,7 +62,7 @@ const getAverageOverTime = (data, TIME) => {
     axiosResponseTime: getAverage(axiosResponseArr),
     sbResponseTime: getAverage(sbResponseArr),
     sbProcessTime: getAverage(sbProcessTimeArr),
-    skipResponeTime: getAverage(skipResponseArr)
+    skipResponseTime: getAverage(skipResponseArr)
   }
 }
 
