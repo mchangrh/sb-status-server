@@ -45,12 +45,13 @@ const getTime = async () => {
 }
 
 const getAverage = (data) => data.reduce((a, b) => a + b, 0) / data.length
-const getAverageOverTime = (data, TIME) => {
+const getAverageOverTime = (data, duration) => {
+  const startTime = new Date().getTime() - duration
   const axiosResponseArr = []
   const sbResponseArr = []
   const sbProcessTimeArr = []
   const skipResponseArr = []
-  const filtered = getRange(data, TIME)
+  const filtered = getRange(data, startTime)
   for (const x of filtered) {
     axiosResponseArr.push(x.axiosResponseTime)
     sbResponseArr.push(x.sbResponseTime)
@@ -66,7 +67,9 @@ const getAverageOverTime = (data, TIME) => {
   }
 }
 
-const getRange = (data, time) => data.filter((x) => x.time > (new Date().getTime() - time))
+const chartFilter = (data) => data.map(x => { return { time: x.time, pt: x.processTime, status: x.sbResponseTime, skip: x.skipResponseTime } })
+
+const getRange = (data, time) => data.filter((x) => (x.time > time && x.status === 200))
 
 const getData = () => readFile().data
 
@@ -84,7 +87,9 @@ function startWebserver () {
   })
   fastify.get('/raw/chart', (request, reply) => {
     const duration = Number(request.query?.duration) || DAY
-    reply.send(getRange(getData(), duration))
+    reply.send(chartFilter(
+      getRange(getData(), new Date().getTime() - duration)
+    ))
   })
   fastify.get('/raw', (request, reply) => {
     reply.send(getData())
