@@ -67,7 +67,7 @@ const getAverageOverTime = (data, duration) => {
   }
 }
 
-const chartFilter = (data) => data.map(x => { return { time: x.time, pt: x.processTime, status: x.sbResponseTime, skip: x.skipResponseTime } })
+const chartFilter = (data) => data.map(x => { return { time: x.time, pt: x.sbProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime } })
 
 const getRange = (data, time) => data.filter((x) => (x.time > time && x.status === 200))
 
