@@ -68,6 +68,22 @@ const getAverageOverTime = (data, TIME) => {
 
 const getRange = (data, time) => data.filter((x) => x.time > (new Date().getTime() - time))
 
+const chartRefactor = (data) => {
+  const processTime = []
+  const statusTime = []
+  const skipTime = []
+  data.forEach((val) => {
+    processTime.push({ x: val.time, y: val.sbProcessTime })
+    statusTime.push({ x: val.time, y: val.sbResponseTime })
+    skipTime.push({ x: val.time, y: val.skipResponseTime })
+  })
+  return {
+    processTime,
+    statusTime,
+    skipTime
+  }
+}
+
 const getData = () => readFile().data
 
 // start
@@ -82,8 +98,8 @@ function startWebserver () {
   fastify.get('/last', async (request, reply) => {
     reply.send(getData().pop())
   })
-  fastify.get('/raw/day', (request, reply) => {
-    reply.send(getRange(getData(), DAY))
+  fastify.get('/raw/chart', (request, reply) => {
+    reply.send(chartRefactor(getRange(getData(), DAY)))
   })
   fastify.get('/raw', (request, reply) => {
     reply.send(getData())
