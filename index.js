@@ -70,6 +70,10 @@ const getData = () => readFile().data
 
 // start
 function startWebserver () {
+  fastify.register(require('fastify-cors'), {
+    origin: '*',
+    methods: 'GET'
+  })
   fastify.all('/status', async (request, reply) => {
     reply.send(await getTime())
   })

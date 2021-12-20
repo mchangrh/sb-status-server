@@ -6,6 +6,7 @@
   "dependencies": {
     "axios": "^0.24.0",
     "fastify": "^3.24.1",
+    "fastify-cors": "^6.0.2",
     "node-cron": "^3.0.0"
   },
   "devDependencies": {
