@@ -72,18 +72,18 @@ const getData = () => readFile().data
 function startWebserver () {
   fastify.register(require('fastify-cors'), {
     origin: '*',
-    methods: 'GET'
+    methods: ['GET']
   })
-  fastify.all('/status', async (request, reply) => {
+  fastify.get('/status', async (request, reply) => {
     reply.send(await getTime())
   })
-  fastify.all('/last', async (request, reply) => {
+  fastify.get('/last', async (request, reply) => {
     reply.send(getData().pop())
   })
-  fastify.all('/raw', (request, reply) => {
+  fastify.get('/raw', (request, reply) => {
     reply.send(getData())
   })
-  fastify.all('/all', (request, reply) => {
+  fastify.get('/all', (request, reply) => {
     const data = getData()
     reply.send({
       last: data[data.length - 1],
@@ -92,22 +92,22 @@ function startWebserver () {
     })
     getTime()
   })
-  fastify.all('/average/5', (request, reply) => {
+  fastify.get('/average/5', (request, reply) => {
     reply.send(getAverageOverTime(getData(), FIVEMINUTES))
   })
-  fastify.all('/average/15', (request, reply) => {
+  fastify.get('/average/15', (request, reply) => {
     reply.send(getAverageOverTime(getData(), FIFTEENMINUTES))
   })
-  fastify.all('/average', (request, reply) => {
+  fastify.get('/average', (request, reply) => {
     reply.send({
       5: getAverageOverTime(getData(), FIVEMINUTES),
       15: getAverageOverTime(getData(), FIFTEENMINUTES)
     })
   })
-  fastify.all('/', (request, reply) => {
+  fastify.get('/', (request, reply) => {
     reply.redirect(302, '/status')
   })
-  fastify.all('*', function (request, reply) {
+  fastify.get('*', function (request, reply) {
     reply.code(404).send()
   })
   fastify.listen(3000, function (err, address) {
