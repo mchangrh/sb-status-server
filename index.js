@@ -3,6 +3,7 @@ const fs = require('fs')
 const cron = require('node-cron')
 const FIVEMINUTES = 5 * 60 * 1000
 const FIFTEENMINUTES = FIVEMINUTES * 3
+const DAY = 60 * 60 * 24 * 1000
 // set up node cron
 cron.schedule('* * * * *', () => {
   getTime()
@@ -49,13 +50,12 @@ const getAverageOverTime = (data, TIME) => {
   const sbResponseArr = []
   const sbProcessTimeArr = []
   const skipResponseArr = []
-  for (const x of data) {
-    if (x.time > (new Date().getTime() - TIME)) {
-      axiosResponseArr.push(x.axiosResponseTime)
-      sbResponseArr.push(x.sbResponseTime)
-      sbProcessTimeArr.push(x.sbProcessTime)
-      skipResponseArr.push(x.skipResponseTime)
-    }
+  const filtered = getRange(data, TIME)
+  for (const x of filtered) {
+    axiosResponseArr.push(x.axiosResponseTime)
+    sbResponseArr.push(x.sbResponseTime)
+    sbProcessTimeArr.push(x.sbProcessTime)
+    skipResponseArr.push(x.skipResponseTime)
   }
   return {
     samples: axiosResponseArr.length,
@@ -65,6 +65,8 @@ const getAverageOverTime = (data, TIME) => {
     skipResponseTime: getAverage(skipResponseArr)
   }
 }
+
+const getRange = (data, time) => data.filter((x) => x.time > (new Date().getTime() - time))
 
 const getData = () => readFile().data
 
@@ -79,6 +81,9 @@ function startWebserver () {
   })
   fastify.get('/last', async (request, reply) => {
     reply.send(getData().pop())
+  })
+  fastify.get('/raw/day', (request, reply) => {
+    reply.send(getRange(getData(), DAY))
   })
   fastify.get('/raw', (request, reply) => {
     reply.send(getData())
