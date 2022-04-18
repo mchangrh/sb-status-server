@@ -5,8 +5,10 @@
   "main": "index.js",
   "dependencies": {
     "axios": "^0.26.1",
+    "dotenv": "^16.0.0",
     "fastify": "^3.28.0",
     "fastify-cors": "^6.0.3",
+    "mongodb": "^4.5.0",
     "node-cron": "^3.0.0"
   },
   "devDependencies": {

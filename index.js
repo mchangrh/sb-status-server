@@ -1,62 +1,74 @@
-const fastify = require('fastify')()
-const fs = require('fs')
-const cron = require('node-cron')
-const FIVEMINUTES = 5 * 60 * 1000
-const FIFTEENMINUTES = FIVEMINUTES * 3
-const DAY = 60 * 60 * 24 * 1000
+require("dotenv").config();
+const fastify = require("fastify")();
+const mongo = require("mongodb").MongoClient;
+const cron = require("node-cron");
+const FIVEMINUTES = 5 * 60 * 1000;
+const FIFTEENMINUTES = FIVEMINUTES * 3;
+const DAY = 60 * 60 * 24 * 1000;
+
+let statusDB;
+// mongodb setup
+mongo.connect(
+  process.env.MONGO_AUTH, (err, client) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    const db = client.db("sb-status");
+    statusDB = db.collection("status");
+  }
+);
 // set up node cron
-cron.schedule('* * * * *', () => {
-  getTime()
-})
+cron.schedule("* * * * *", () => {
+  getTime();
+});
 // set up axios
-const axios = require('axios')
+const axios = require("axios");
 axios.interceptors.request.use(config => {
-  config.metadata = config.metadata || {}
-  config.metadata.startedAt = new Date().getTime()
-  return config
-})
+  config.metadata = config.metadata || {};
+  config.metadata.startedAt = new Date().getTime();
+  return config;
+});
 axios.interceptors.response.use(response => {
-  response.config.metadata.responseTime = new Date().getTime() - response.config.metadata.startedAt
-  return response
-})
-// read/write files
-const readFile = () => JSON.parse(fs.readFileSync('stats.json', 'utf8'))
-const writeFile = (data) => fs.writeFileSync('stats.json', JSON.stringify(data, null, 2), (err) => { if (err) console.log(err) })
-const appendData = (data) => {
-  const file = readFile()
-  file.data.push(data)
-  writeFile(file)
-}
+  response.config.metadata.responseTime = new Date().getTime() - response.config.metadata.startedAt;
+  return response;
+});
 
 const getTime = async () => {
-  const nowTime = new Date().getTime()
-  const statusRes = await axios.get('https://sponsor.ajay.app/api/status')
-  const skipRes = await axios.get('https://sponsor.ajay.app/api/skipSegments/abcd')
+  const time = new Date();
+  const statusRes = await axios.get("https://sponsor.ajay.app/api/status");
+  const skipRes = await axios.get("https://sponsor.ajay.app/api/skipSegments/abcd");
   const data = {
-    time: nowTime,
+    time,
     axiosResponseTime: statusRes.config.metadata.responseTime,
-    sbResponseTime: statusRes.data.startTime - nowTime,
+    sbResponseTime: statusRes.data.startTime - time,
     sbProcessTime: statusRes.data.processTime,
     skipResponseTime: skipRes.config.metadata.responseTime,
     status: statusRes.status
-  }
-  appendData(data)
-  return data
-}
+  };
+  await statusDB.insertOne(data);
+  return transformData(data);
+};
 
-const getAverage = (data) => data.reduce((a, b) => a + b, 0) / data.length
-const getAverageOverTime = (data, duration) => {
-  const startTime = new Date().getTime() - duration
-  const axiosResponseArr = []
-  const sbResponseArr = []
-  const sbProcessTimeArr = []
-  const skipResponseArr = []
-  const filtered = getRange(data, startTime)
+const transformData = (data) => {
+  delete data._id;
+  data.time = new Date(data.time).getTime();
+  return data;
+};
+
+const getAverage = (data) => data.reduce((a, b) => a + b, 0) / data.length;
+const getAverageOverTime = async (duration) => {
+  const startTime = new Date().getTime() - duration;
+  const axiosResponseArr = [];
+  const sbResponseArr = [];
+  const sbProcessTimeArr = [];
+  const skipResponseArr = [];
+  const filtered = await getRange(startTime);
   for (const x of filtered) {
-    axiosResponseArr.push(x.axiosResponseTime)
-    sbResponseArr.push(x.sbResponseTime)
-    sbProcessTimeArr.push(x.sbProcessTime)
-    skipResponseArr.push(x.skipResponseTime)
+    axiosResponseArr.push(x.axiosResponseTime);
+    sbResponseArr.push(x.sbResponseTime);
+    sbProcessTimeArr.push(x.sbProcessTime);
+    skipResponseArr.push(x.skipResponseTime);
   }
   return {
     samples: axiosResponseArr.length,
@@ -64,69 +76,63 @@ const getAverageOverTime = (data, duration) => {
     sbResponseTime: getAverage(sbResponseArr),
     sbProcessTime: getAverage(sbProcessTimeArr),
     skipResponseTime: getAverage(skipResponseArr)
-  }
-}
+  };
+};
 
-const chartFilter = (data) => data.map(x => { return { time: x.time, pt: x.sbProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime } })
-
-const getRange = (data, time) => data.filter((x) => (x.time > time && x.status === 200))
-
-const getData = () => readFile().data
+const chartFilter = (data) => data.map(x => { return { time: x.time, pt: x.sbProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime }; });
+const getRange = async (time) => statusDB.find({"time": {$gte: new Date(time)}}).toArray();
+const getLast = async () => statusDB.findOne({}, {sort: { time: "desc"}});
 
 // start
 function startWebserver () {
-  fastify.register(require('fastify-cors'), {
-    origin: '*',
-    methods: ['GET']
-  })
-  fastify.get('/status', async (request, reply) => {
-    reply.send(await getTime())
-  })
-  fastify.get('/last', async (request, reply) => {
-    reply.send(getData().pop())
-  })
-  fastify.get('/raw/chart', (request, reply) => {
-    const duration = Number(request.query?.duration) || DAY
+  fastify.register(require("fastify-cors"), {
+    origin: "*",
+    methods: ["GET"]
+  });
+  fastify.get("/status", async (request, reply) => {
+    reply.send(await getTime());
+  });
+  fastify.get("/last", async (request, reply) => {
+    reply.send(transformData(await getLast()));
+  });
+  fastify.get("/raw/chart", async (request, reply) => {
+    const duration = Number(request.query?.duration) || DAY;
     reply.send(chartFilter(
-      getRange(getData(), new Date().getTime() - duration)
-    ))
-  })
-  fastify.get('/raw', (request, reply) => {
-    reply.send(getData())
-  })
-  fastify.get('/all', (request, reply) => {
-    const data = getData()
+      await getRange(new Date().getTime() - duration)
+    ));
+  });
+  fastify.get("/all", async (request, reply) => {
     reply.send({
-      last: data[data.length - 1],
-      5: getAverageOverTime(data, FIVEMINUTES),
-      15: getAverageOverTime(data, FIFTEENMINUTES)
-    })
-    getTime()
-  })
-  fastify.get('/average/5', (request, reply) => {
-    reply.send(getAverageOverTime(getData(), FIVEMINUTES))
-  })
-  fastify.get('/average/15', (request, reply) => {
-    reply.send(getAverageOverTime(getData(), FIFTEENMINUTES))
-  })
-  fastify.get('/average', (request, reply) => {
+      last: transformData(await getLast()),
+      5: await getAverageOverTime(FIVEMINUTES),
+      15: await getAverageOverTime(FIFTEENMINUTES)
+    });
+    getTime();
+  });
+  fastify.get("/average/5", async (request, reply) => {
+    reply.send(await getAverageOverTime(FIVEMINUTES));
+  });
+  fastify.get("/average/15", async (request, reply) => {
+    reply.send(await getAverageOverTime(FIFTEENMINUTES));
+  });
+  fastify.get("/average", async (request, reply) => {
     reply.send({
-      5: getAverageOverTime(getData(), FIVEMINUTES),
-      15: getAverageOverTime(getData(), FIFTEENMINUTES)
-    })
-  })
-  fastify.get('/', (request, reply) => {
-    reply.redirect(302, '/status')
-  })
-  fastify.get('*', function (request, reply) {
-    reply.code(404).send()
-  })
+      5: await getAverageOverTime(FIVEMINUTES),
+      15: await getAverageOverTime(FIFTEENMINUTES)
+    });
+  });
+  fastify.get("/", (request, reply) => {
+    reply.redirect(302, "/status");
+  });
+  fastify.get("*", function (request, reply) {
+    reply.code(404).send();
+  });
   fastify.listen(3000, function (err, address) {
     if (err) {
-      console.error(err)
-      process.exit(1)
+      console.error(err);
+      process.exit(1);
     }
-    console.log(`server listening on ${address}`)
-  })
+    console.log(`server listening on ${address}`);
+  });
 }
-startWebserver()
+startWebserver();

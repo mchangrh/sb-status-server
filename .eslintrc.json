@@ -5,11 +5,11 @@
         "node": true
     },
     "extends": [
-        "standard"
+        "eslint:recommended"
     ],
-    "parserOptions": {
-        "ecmaVersion": 12
-    },
     "rules": {
+        "indent": ["error", 2],
+        "quotes": 2,
+        "semi": 2
     }
 }
