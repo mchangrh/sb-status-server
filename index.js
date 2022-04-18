@@ -15,7 +15,8 @@ mongo.connect(
       return;
     }
     const db = client.db("sb-status");
-    statusDB = db.collection("status");
+    const collection = process.env.ENV === "production" ? "status" : "status_dev";
+    statusDB = db.collection(collection);
   }
 );
 // set up node cron
