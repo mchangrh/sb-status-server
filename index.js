@@ -37,8 +37,8 @@ axios.interceptors.response.use(response => {
 
 const getTime = async () => {
   const time = new Date();
-  const statusRes = await axios.get("https://sponsor.ajay.app/api/status");
-  const skipRes = await axios.get("https://sponsor.ajay.app/api/skipSegments/abcd");
+  const statusRes = await axios.get("https://api.sponsor.ajay.app/api/status");
+  const skipRes = await axios.get("https://api.sponsor.ajay.app/api/skipSegments/abcd");
   const data = {
     time,
     axiosResponseTime: statusRes.config.metadata.responseTime,
@@ -128,7 +128,7 @@ function startWebserver () {
   fastify.get("*", function (request, reply) {
     reply.code(404).send();
   });
-  fastify.listen(3000, function (err, address) {
+  fastify.listen(process.env.PORT, function (err, address) {
     if (err) {
       console.error(err);
       process.exit(1);
