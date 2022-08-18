@@ -45,7 +45,8 @@ const getTime = async () => {
     sbResponseTime: statusRes.data.startTime - time,
     sbProcessTime: statusRes.data.processTime,
     skipResponseTime: skipRes.config.metadata.responseTime,
-    status: statusRes.status
+    status: statusRes.status,
+    hostname: statusRes.hostname
   };
   await statusDB.insertOne(data);
   return transformData(data);
