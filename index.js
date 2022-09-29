@@ -85,7 +85,7 @@ const getAverageOverTime = async (duration) => {
   };
 };
 
-const chartFilter = (data) => data.map(x => { return { time: new Date(x.time).getTime(), pt: x.sbProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime }; });
+const chartFilter = (data) => data.map(x => { return { time: new Date(x.time).getTime(), pt: x.sbProcessTime,rt: x.redisProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime }; });
 const getRange = async (time) => statusDB.find({"time": {$gte: new Date(time)}}).toArray();
 const getLast = async () => statusDB.findOne({}, {sort: { time: "desc"}});
 
