@@ -44,6 +44,7 @@ const getTime = async () => {
     axiosResponseTime: statusRes.config.metadata.responseTime,
     sbResponseTime: statusRes.data.startTime - time,
     sbProcessTime: statusRes.data.processTime,
+    redisProcessTime: statusRes.data.redisProcessTime,
     skipResponseTime: skipRes.config.metadata.responseTime,
     status: statusRes.status,
     hostname: statusRes.hostname
@@ -64,12 +65,14 @@ const getAverageOverTime = async (duration) => {
   const axiosResponseArr = [];
   const sbResponseArr = [];
   const sbProcessTimeArr = [];
+  const redisProcessTimeArr = [];
   const skipResponseArr = [];
   const filtered = await getRange(startTime);
   for (const x of filtered) {
     axiosResponseArr.push(x.axiosResponseTime);
     sbResponseArr.push(x.sbResponseTime);
     sbProcessTimeArr.push(x.sbProcessTime);
+    redisProcessTimeArr.push(x.redisProcessTime);
     skipResponseArr.push(x.skipResponseTime);
   }
   return {
@@ -77,6 +80,7 @@ const getAverageOverTime = async (duration) => {
     axiosResponseTime: getAverage(axiosResponseArr),
     sbResponseTime: getAverage(sbResponseArr),
     sbProcessTime: getAverage(sbProcessTimeArr),
+    redisProcessTime: getAverage(redisProcessTimeArr),
     skipResponseTime: getAverage(skipResponseArr)
   };
 };
