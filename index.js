@@ -2,7 +2,7 @@ require("dotenv").config();
 const fastify = require("fastify")();
 const mongo = require("mongodb").MongoClient;
 const cron = require("node-cron");
-const { processErrors } = require("./alert");
+const { processErrors, isDegraded } = require("./alert");
 const FIVEMINUTES = 5 * 60 * 1000;
 const FIFTEENMINUTES = FIVEMINUTES * 3;
 const DAY = 60 * 60 * 24 * 1000;
@@ -128,6 +128,14 @@ function startWebserver () {
       5: await getAverageOverTime(FIVEMINUTES),
       15: await getAverageOverTime(FIFTEENMINUTES)
     });
+  });
+  fastify.get("/degraded", async (request, reply) => {
+    const degraded = isDegraded();
+    if (degraded) {
+      reply.code(500).send("degraded");
+    } else {
+      reply.send("ok");
+    }
   });
   fastify.get("/", (request, reply) => {
     reply.redirect(302, "/status");

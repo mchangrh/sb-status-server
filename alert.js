@@ -105,13 +105,12 @@ function sendAlert(service, severity, amount) {
 }
 
 function isDegraded() {
-  let count = 0;
   for (const service in errors) {
     if (errors[service] >= 2) {
-      count++;
+      return true;
     }
   }
-  return count;
+  return false;
 }
 
 module.exports = {
