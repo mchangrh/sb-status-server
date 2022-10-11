@@ -2,6 +2,7 @@ require("dotenv").config();
 const fastify = require("fastify")();
 const mongo = require("mongodb").MongoClient;
 const cron = require("node-cron");
+const { processErrors } = require("./alert");
 const FIVEMINUTES = 5 * 60 * 1000;
 const FIFTEENMINUTES = FIVEMINUTES * 3;
 const DAY = 60 * 60 * 24 * 1000;
@@ -49,6 +50,7 @@ const getTime = async () => {
     status: statusRes.status,
     hostname: statusRes.hostname
   };
+  processErrors(data);
   await statusDB.insertOne(data);
   return transformData(data);
 };
@@ -91,7 +93,7 @@ const getLast = async () => statusDB.findOne({}, {sort: { time: "desc"}});
 
 // start
 function startWebserver () {
-  fastify.register(require("fastify-cors"), {
+  fastify.register(require("@fastify/cors"), {
     origin: "*",
     methods: ["GET"]
   });
