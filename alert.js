@@ -62,13 +62,13 @@ function getSeverity (data, threshold) {
 function checkThreshold(data, threshold) {
   for (const [name, rt] of Object.entries(data)) {
     const level = getSeverity(rt, threshold);
-    if (level >= 0) {
+    if (level >= 1) {
       errors[name] += level;
       noErrors[name] = 0;
-    }
-    else {
-      errors[name] -= 1;
+    } else {
       noErrors[name] += 1;
+      // clear errors if no errors for 5 checks
+      if (noErrors[name] >= 5) errors[name] = 0;
     }
   }
 }
