@@ -17,7 +17,7 @@ const componentIdMap = {
   sbProcessTime: "cl94hg7a5241669i6nd3b50md49",
   redisProcessTime: "cl94hgdgu241771i6ndg385xz53",
   skipResponseTime: "cl94hfn4m237793iknd6mvf3dma",
-  status: "cl94hlifj2207482ynda92a904b"
+  status: "cl94ljutl28855hsola5c5czy7"
 };
 
 /*
