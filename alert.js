@@ -1,5 +1,6 @@
 require("dotenv").config();
 const axios = require("axios");
+const { webhooks } = require("./webhooks.json");
 
 const errors = {
   axiosResponseTime: 0,
@@ -11,15 +12,6 @@ const errors = {
 };
 const noErrors = {...errors};
 
-const componentIdMap = {
-  axiosResponseTime: "cl94hfdc0237658ikndrptvvfsk",
-  sbResponseTime: "cl94hfv6p241538i6ndtm94o7ot",
-  sbProcessTime: "cl94hg7a5241669i6nd3b50md49",
-  redisProcessTime: "cl94hgdgu241771i6ndg385xz53",
-  skipResponseTime: "cl94hfn4m237793iknd6mvf3dma",
-  status: "cl94ljutl28855hsola5c5czy7"
-};
-
 /*
 const pageStatus = {
   up: "UP",
@@ -29,10 +21,10 @@ const pageStatus = {
 */
 
 const componentStatus = {
-  up: "OPERATIONAL",
-  degraded: "DEGRADEDPERFORMANCE",
-  partial: "PARTIALOUTAGE",
-  major: "MAJOROUTAGE"
+  "Operational": "OPERATIONAL",
+  "Degraded": "DEGRADEDPERFORMANCE",
+  "Partial Outage": "PARTIALOUTAGE",
+  "Major Outage": "MAJOROUTAGE"
 };
 
 const httpThreshold = {
@@ -83,34 +75,46 @@ function processErrors(data) {
 
 function checkErrors(data) {
   for (const service in errors) {
+    const amount = data[service];
     if (errors[service] >= 2) {
       console.log("alerting on ", service);
       const threshold = httpElements.includes(service) ? httpThreshold : processThreshold;
-      const severity = getSeverity(data[service], threshold);
-      sendAlert(service, severity);
+      const severity = getSeverity(amount, threshold);
+      sendAlert(service, severity, amount);
     } else if (noErrors[service] == 5) {
       console.log("clearing alert on ", service);
       // if no errors, send OK status
-      sendAlert(service, 0);
+      sendAlert(service, 0, amount);
     }
   }
 }
 
-function sendAlert(service, severity) {
+function sendAlert(service, severity, amount) {
   const status = Object.values(componentStatus)[severity];
-  const id = componentIdMap[service];
-  axios.put(`https://api.instatus.com/v1/${process.env.INSTATUS_PAGEID}/components/${id}`, {
+  const url = webhooks[service];
+  const up = severity == 0;
+  axios.POST(url, {
+    trigger: up ? "up" : "down",
+    name: `${service} is/has ${Object.keys(componentStatus)[severity]}`,
+    message: up ? "Service is responding normally" : `${service} is/has ${Object.keys(componentStatus)[severity]} with time of ${amount}ms`,
     status
-  },{
-    headers: {
-      "Authorization": `Bearer ${process.env.INSTATUS_APIKEY}`
-    },
   })
     .catch(err => {
       console.log("instatus error", err);
     });
 }
 
+function isDegraded() {
+  let count = 0;
+  for (const service in errors) {
+    if (errors[service] >= 2) {
+      count++;
+    }
+  }
+  return count;
+}
+
 module.exports = {
-  processErrors
+  processErrors,
+  isDegraded,
 };
