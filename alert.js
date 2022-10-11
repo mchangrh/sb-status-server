@@ -89,6 +89,7 @@ function checkErrors(data) {
       const severity = getSeverity(data[service], threshold);
       sendAlert(service, severity);
     } else if (noErrors[service] == 5) {
+      console.log("clearing alert on ", service);
       // if no errors, send OK status
       sendAlert(service, 0);
     }
