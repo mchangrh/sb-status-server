@@ -93,7 +93,7 @@ function sendAlert(service, severity, amount) {
   const status = Object.values(componentStatus)[severity];
   const url = webhooks[service];
   const up = severity == 0;
-  axios.POST(url, {
+  axios.post(url, {
     trigger: up ? "up" : "down",
     name: `${service} is/has ${Object.keys(componentStatus)[severity]}`,
     message: up ? "Service is responding normally" : `${service} is/has ${Object.keys(componentStatus)[severity]} with time of ${amount}ms`,
