@@ -1,31 +1,25 @@
 require("dotenv").config();
 const fastify = require("fastify")();
-const mongo = require("mongodb").MongoClient;
+const { MongoClient } = require("mongodb");
 const cron = require("node-cron");
-const { processErrors, isDegraded } = require("./alert");
 const FIVEMINUTES = 5 * 60 * 1000;
 const FIFTEENMINUTES = FIVEMINUTES * 3;
 const DAY = 60 * 60 * 24 * 1000;
+const axios = require("axios");
 
 let statusDB;
 // mongodb setup
-mongo.connect(
-  process.env.MONGO_AUTH, (err, client) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    const db = client.db("sb-status");
-    const collection = process.env.ENV === "production" ? "status" : "status_dev";
-    statusDB = db.collection(collection);
-  }
-);
-// set up node cron
-cron.schedule("* * * * *", () => {
-  getTime();
+const client = new MongoClient(process.env.MONGO_AUTH);
+client.connect().then(() => {
+  const db = client.db("sb-status");
+  const collection = process.env.ENV === "production" ? "status" : "status_dev";
+  statusDB = db.collection(collection);
+}).catch(err => {
+  console.error(err);
+  process.exit(1);
 });
-// set up axios
-const axios = require("axios");
+// set up node cron
+cron.schedule("* * * * *", () => getTime());
 axios.interceptors.request.use(config => {
   config.metadata = config.metadata || {};
   config.metadata.startedAt = new Date().getTime();
@@ -50,7 +44,6 @@ const getTime = async () => {
     status: statusRes.status,
     hostname: statusRes.hostname
   };
-  processErrors(data);
   await statusDB.insertOne(data);
   return transformData(data);
 };
@@ -87,7 +80,7 @@ const getAverageOverTime = async (duration) => {
   };
 };
 
-const chartFilter = (data) => data.map(x => { return { time: new Date(x.time).getTime(), pt: x.sbProcessTime,rt: x.redisProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime }; });
+const chartFilter = (data) => data.map(x => ({ time: new Date(x.time).getTime(), pt: x.sbProcessTime,rt: x.redisProcessTime, status: x.sbResponseTime, skip: x.skipResponseTime }));
 const getRange = async (time) => statusDB.find({"time": {$gte: new Date(time)}}).toArray();
 const getLast = async () => statusDB.findOne({}, {sort: { time: "desc"}});
 
@@ -117,6 +110,7 @@ function startWebserver () {
     });
     getTime();
   });
+
   fastify.get("/average/5", async (request, reply) => {
     reply.send(await getAverageOverTime(FIVEMINUTES));
   });
@@ -129,21 +123,13 @@ function startWebserver () {
       15: await getAverageOverTime(FIFTEENMINUTES)
     });
   });
-  fastify.get("/degraded", async (request, reply) => {
-    const degraded = isDegraded();
-    if (degraded) {
-      reply.code(500).send("degraded");
-    } else {
-      reply.send("ok");
-    }
-  });
   fastify.get("/", (request, reply) => {
     reply.redirect(302, "/status");
   });
   fastify.get("*", function (request, reply) {
     reply.code(404).send();
   });
-  fastify.listen(process.env.PORT, function (err, address) {
+  fastify.listen({ port: process.env.PORT }, function (err, address) {
     if (err) {
       console.error(err);
       process.exit(1);
