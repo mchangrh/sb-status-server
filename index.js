@@ -30,10 +30,13 @@ axios.interceptors.response.use(response => {
   return response;
 });
 
+// https://stackoverflow.com/a/58326357
+const genRandomHex = size => [...Array(size)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+
 const getTime = async () => {
   const time = new Date();
   const statusRes = await axios.get("https://api.sponsor.ajay.app/api/status");
-  const skipRes = await axios.get("https://api.sponsor.ajay.app/api/skipSegments/abcd");
+  const skipRes = await axios.get(`https://api.sponsor.ajay.app/api/skipSegments/${genRandomHex(4)}`);
   const data = {
     time,
     axiosResponseTime: statusRes.config.metadata.responseTime,
